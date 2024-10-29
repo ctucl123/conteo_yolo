@@ -4,7 +4,7 @@ import scipy
 import lap
 from scipy.spatial.distance import cdist
 
-from cython_bbox import bbox_overlaps 
+from uiou import bbox_overlaps 
 from kalman_filter import KalmanFilter
 
 

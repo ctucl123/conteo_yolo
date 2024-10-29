@@ -42,6 +42,7 @@ while cap.isOpened():
         dets.append([x1, y1, x2, y2, conf])
         i+=1
     dets = np.array(dets, dtype=np.float32)
+    print(dets)
     if len(dets) >0:
         online_targets = tracker.update(dets, frame.shape,frame.shape)
         for target in online_targets:

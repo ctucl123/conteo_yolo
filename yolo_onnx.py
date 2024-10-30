@@ -19,7 +19,7 @@ def compute_iou(box, boxes):
     union_area = box_area + boxes_area - intersection_area
 
     # Compute IoU
-    iou = intersection_area / union_area
+    iou = np.where(union_area > 0, intersection_area / union_area, 0)
 
     return iou
 
@@ -44,18 +44,9 @@ def nms(boxes, scores, iou_threshold):
 
     return keep_boxes
 
-def multiclass_nms(boxes, scores, class_ids, iou_threshold):
+def multiclass_nms(boxes, scores, iou_threshold):
 
-    unique_class_ids = np.unique(class_ids)
-
-    keep_boxes = []
-    for class_id in unique_class_ids:
-        class_indices = np.where(class_ids == class_id)[0]
-        class_boxes = boxes[class_indices,:]
-        class_scores = scores[class_indices]
-        class_keep_boxes = nms(class_boxes, class_scores, iou_threshold)
-        keep_boxes.extend(class_indices[class_keep_boxes])
-
+    keep_boxes = nms(boxes, scores, iou_threshold)
     return keep_boxes
 
 
@@ -69,25 +60,38 @@ def xywh2xyxy(x):
     return y
 
 def draw_detections(image, boxes, scores, class_ids, mask_alpha=0.3):
+    # Crea una copia de la imagen original para dibujar las detecciones
     det_img = image.copy()
 
+    # Obtiene la altura y el ancho de la imagen
     img_height, img_width = image.shape[:2]
-    font_size = min([img_height, img_width]) * 0.0006
-    text_thickness = int(min([img_height, img_width]) * 0.001)
+    
+    # Calcula el tamaño de la fuente y el grosor del texto
+    font_size = min(img_height, img_width) * 0.0006
+    text_thickness = int(min(img_height, img_width) * 0.001)
 
+    # Dibuja las máscaras (si es necesario)
     det_img = draw_masks(det_img, boxes, class_ids, mask_alpha)
 
-    # Draw bounding boxes and labels of detections
-    for class_id, box, score in zip(class_ids, boxes, scores):
-        color = (21,  60, 204)
+    # Verifica si hay detecciones
+    if len(boxes) > 0:
+        # Dibuja cuadros delimitadores y etiquetas para las detecciones
+        for box, score in zip(boxes, scores):
+            # Define un color fijo para las detecciones
+            color = (21, 60, 204)  # Color azul
 
-        draw_box(det_img, box, color)
+            # Dibuja el cuadro delimitador
+            draw_box(det_img, box, color)
 
-        label = "passenger"
-        caption = f'{label} {int(score * 100)}%'
-        draw_text(det_img, caption, box, color, font_size, text_thickness)
+            # Establece la etiqueta para la clase detectada (solo una clase)
+            label = "passenger"
+            caption = f'{label} {int(score * 100)}%'  # Formato del texto
+
+            # Dibuja el texto en la imagen
+            draw_text(det_img, caption, box, color, font_size, text_thickness)
 
     return det_img
+
 
 
 def draw_detections(image, boxes, scores, class_ids, mask_alpha=0.3):
@@ -208,15 +212,14 @@ class YOLOv8:
 
         # Get the class with the highest confidence
         class_ids = np.argmax(predictions[:, 4:], axis=1)
-
         # Get bounding boxes for each object
         boxes = self.extract_boxes(predictions)
 
         # Apply non-maxima suppression to suppress weak, overlapping bounding boxes
         # indices = nms(boxes, scores, self.iou_threshold)
-        indices = multiclass_nms(boxes, scores, class_ids, self.iou_threshold)
+        indices = multiclass_nms(boxes, scores, self.iou_threshold)
 
-        return boxes[indices], scores[indices], class_ids[indices]
+        return boxes[indices], scores[indices], [class_ids[indices]]
 
     def extract_boxes(self, predictions):
         # Extract boxes from predictions

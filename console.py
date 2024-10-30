@@ -25,8 +25,6 @@ contador_objetos = 0
 linea_y = 900 
 last_ids = set()
 while cap.isOpened():
-    if cv2.waitKey(1) == ord('q'):
-        break
     ret, frame = cap.read()
     if not ret:
         break
@@ -50,16 +48,8 @@ while cap.isOpened():
             x2, y2 = int(x1 + w), int(y1 + h)
             cx, cy = int(x1 + w / 2), int(y1 + h / 2)
             cx, cy = int(x1 + w / 2), int(y1 + h / 2)
-            cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
-            cv2.putText(frame, f'ID: {track_id}', (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
-
             if linea_y - 5 < cy < linea_y + 15 and track_id not in last_ids:
                 last_ids.add(track_id)
                 contador_objetos += 1
-
-    cv2.line(frame, (0, linea_y), (frame.shape[1], linea_y), (0, 0, 255), 2)
-    cv2.rectangle(frame, (40, 200), (550, 320), (0, 0, 0), -1)
-    cv2.putText(frame, f'Pasajeros: {contador_objetos}', (80, 280), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 255), 3)
-    frame_resized = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
-    cv2.imshow("Detected Objects", frame_resized)
+                print(contador_objetos)
 

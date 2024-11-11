@@ -6,14 +6,13 @@ from yolo_onnx import YOLOv8
 from byte_tracker import BYTETracker
 import numpy as np
 
-
-BUFFER_SIZE = 2000
+BUFFER_SIZE = 10000
 frame_queue = queue.Queue(maxsize=BUFFER_SIZE)
-
+stop_event = threading.Event()  # Evento para indicar que se debe detener el programa
 
 def capture_frames():
     cap = cv2.VideoCapture("rtsp://admin:ctucl2021@@192.168.0.100:554/cam/realmonitor?channel=1&subtype=0")
-    while cap.isOpened():
+    while cap.isOpened() and not stop_event.is_set():  # Verificamos el evento de parada
         ret, frame = cap.read()
         if not ret:
             break
@@ -37,7 +36,8 @@ def process_frames():
     contador_objetos = 0
     linea_y = 600 
     last_ids = set()
-    while True:
+
+    while not frame_queue.empty() or not stop_event.is_set():  # Continuar mientras haya frames o no se haya activado la parada
         if not frame_queue.empty():
             print("ingresamos al procesamiento")
             frame = frame_queue.get()
@@ -45,14 +45,14 @@ def process_frames():
             dets = []
             i = 0
             for result in boxes:
-                x1, y1, x2, y2 =result
+                x1, y1, x2, y2 = result
                 conf = scores[i]
                 dets.append([x1, y1, x2, y2, conf])
-                i+=1
+                i += 1
             print(dets)
             dets = np.array(dets, dtype=np.float32)
-            if len(dets) >0:
-                online_targets = tracker.update(dets, frame.shape,frame.shape)
+            if len(dets) > 0:
+                online_targets = tracker.update(dets, frame.shape, frame.shape)
                 for target in online_targets:
                     tlwh = target.tlwh
                     track_id = target.track_id
@@ -73,13 +73,16 @@ def process_frames():
             frame_resized = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
             cv2.imshow("Detected Objects", frame_resized)
 
-            
             if cv2.waitKey(1) & 0xFF == ord('q'):
+                stop_event.set()  # Establece el evento de parada al presionar 'q'
                 break
         else:
             time.sleep(0.01)
 
     cv2.destroyAllWindows()
+    stop_event.set()  # Establece el evento de parada cuando finaliza el procesamiento
+
+# Crear e iniciar los hilos de captura y procesamiento
 capture_thread = threading.Thread(target=capture_frames)
 process_thread = threading.Thread(target=process_frames)
 

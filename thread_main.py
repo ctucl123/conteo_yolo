@@ -12,7 +12,7 @@ frame_queue = queue.Queue(maxsize=BUFFER_SIZE)
 stop_event = threading.Event()  # Evento para indicar que se debe detener el programa
 
 def capture_frames():
-    cap = cv2.VideoCapture("rtsp://admin:ctucl2021@@192.168.0.100:554/cam/realmonitor?channel=1&subtype=0")
+    cap = cv2.VideoCapture("rtsp://admin:ctucl2021@@192.168.0.101:554/cam/realmonitor?channel=1&subtype=0")
     while cap.isOpened() and not stop_event.is_set():  # Verificamos el evento de parada
         ret, frame = cap.read()
         if not ret:

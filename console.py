@@ -19,10 +19,10 @@ cap = cv2.VideoCapture(video_path)
 if not cap.isOpened():
     print("Error al abrir el video.")
     exit()
-model_path = "models/best.onnx"
+model_path = "models/best_consorcio_test1.onnx"
 yolov8_detector = YOLOv8(model_path, conf_thres=0.5, iou_thres=0.5)
 contador_objetos = 0
-linea_y = 900 
+linea_y = 600 
 last_ids = set()
 while cap.isOpened():
     ret, frame = cap.read()

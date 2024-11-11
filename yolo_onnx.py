@@ -159,8 +159,7 @@ class YOLOv8:
         return self.detect_objects(image)
 
     def initialize_model(self, path):
-        self.session = onnxruntime.InferenceSession(path,
-                                                    providers=onnxruntime.get_available_providers())
+        self.session = onnxruntime.InferenceSession(path,providers=onnxruntime.get_available_providers())
         # Get model info
         self.get_input_details()
         self.get_output_details()
